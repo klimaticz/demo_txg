@@ -1,6 +1,9 @@
 
 # credential file
 .env
+.venv
 
 # package folder
 klimaticz-env/
+
+__pycache__
