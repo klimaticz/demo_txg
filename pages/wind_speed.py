@@ -98,6 +98,6 @@ macro = MacroElement()
 macro._template = Template(template)
 m.get_root().add_child(macro)
 folium.plugins.Draw(export=True).add_to(m)
-output = st_folium(m, width=700, height=500)
+output = st_folium(m, width=1000, height=450)
 
 st.write(df_viz)
