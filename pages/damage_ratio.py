@@ -5,8 +5,8 @@ import pandas as pd
 from services.utils import load_data, get_mid
 from branca.element import Template, MacroElement
 
-st.header("Wind Speed")
 
+st.header("Damage Ratio")
 df = load_data('./data/data.csv')
 
 
@@ -32,7 +32,7 @@ with col3:
 
 RCP = format_rcp(RCP)
 Year = format_year(Year) if RCP != "baseline" else None
-column_string = f"SPD_tc_{RP}_ARI_RCP{RCP}_{Year}" if Year else f"SPD_tc_{RP}_ARI_{RCP}"
+column_string = f"DM_tc_{RP}_ARI_RCP{RCP}_{Year}" if Year else f"DM_tc_{RP}_ARI_{RCP}"
 
 
 df_viz = pd.concat(
@@ -56,11 +56,11 @@ template = """
      border-radius:6px; padding: 10px; font-size:10.5px; right: 20px; top: 20px;'>     
 <div class='legend-scale'>
   <ul class='legend-labels'>
-    <li><span style='background:green; opacity:0.75;'></span>Wind speed <= 55.21</li>
-    <li><span style='background:yellow; opacity:0.75;'></span>55.65 <= Wind speed <= 64.29</li>
-    <li><span style='background:orange; opacity:0.75;'></span>64.50 <= Wind speed <= 75.76</li>
-    <li><span style='background:red; opacity:0.75;'></span>75.90 <= Wind speed <= 90.56</li>
-    <li><span style='background:purple; opacity:0.75;'></span>Wind speed >= 91.07</li>
+    <li><span style='background:green; opacity:0.75;'></span>Damage <= 0.2</li>
+    <li><span style='background:yellow; opacity:0.75;'></span>0.2 < Damage <= 0.4</li>
+    <li><span style='background:orange; opacity:0.75;'></span>0.4 < Damage <= 0.6</li>
+    <li><span style='background:red; opacity:0.75;'></span>0.6 < Damage <= 0.8</li>
+    <li><span style='background:purple; opacity:0.75;'></span>Damage > 0.8</li>
   </ul>
 </div>
 </div> 
@@ -73,15 +73,15 @@ template = """
 
 for index, row in df_viz.iterrows():
     category = None
-    if row[column_string] <= 55.21:
+    if row[column_string] <= 0.2:
         category = 'Category - 1'
-    elif 55.65 < row[column_string] <= 64.29:
+    elif 0.02 < row[column_string] <= 0.4:
         category = 'Category - 2'
-    elif 64.50 < row[column_string] <= 75.76:
+    elif 0.4 < row[column_string] <= 0.6:
         category = 'Category - 3'
-    elif 75.90 < row[column_string] <= 90.56:
+    elif 0.6 < row[column_string] <= 0.8:
         category = 'Category - 4'
-    elif row[column_string] > 91.07:
+    elif row[column_string] > 0.8:
         category = 'Category - 5'
 
     if category:
@@ -93,7 +93,7 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Wind Speed: {round(row[column_string], 2)}"
+            tooltip=f"Damage Ratio: {round(row[column_string], 2)}"
         ).add_to(m)
 
 macro = MacroElement()

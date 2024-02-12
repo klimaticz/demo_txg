@@ -3,7 +3,9 @@
 .env
 .venv
 
+
 # package folder
 klimaticz-env/
+/analysis
 
 __pycache__
