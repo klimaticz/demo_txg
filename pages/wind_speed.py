@@ -2,7 +2,8 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import pandas as pd
-from services.utils import load_data, get_mid
+import altair as alt
+from services.utils import load_data, get_mid, format_data, filter_data
 from branca.element import Template, MacroElement
 
 st.header("Wind Speed")
@@ -36,7 +37,7 @@ column_string = f"SPD_tc_{RP}_ARI_RCP{RCP}_{Year}" if Year else f"SPD_tc_{RP}_AR
 
 
 df_viz = pd.concat(
-    [df['Address'], df['Latitude'], df['Longitude'], df[column_string]], axis=1)
+    [df['ID'], df['Address'], df['Latitude'], df['Longitude'], df[column_string]], axis=1)
 
 mean_latitude, mean_longitude = get_mid(df_viz)
 m = folium.Map(location=[mean_latitude, mean_longitude], zoom_start=5)
@@ -93,13 +94,42 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Wind Speed: {round(row[column_string], 2)}"
+            tooltip=f"Id: {row['ID']}, Wind Speed: {round(row[column_string], 2)}"
         ).add_to(m)
 
 macro = MacroElement()
 macro._template = Template(template)
 m.get_root().add_child(macro)
-folium.plugins.Draw(export=True).add_to(m)
 output = st_folium(m, width=1000, height=450)
 
-st.write(df_viz)
+id = None
+try:
+    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+
+except:
+    st.warning("No Address is selected")
+
+
+if id is not None:
+    df = df[df['ID'] == id]
+    data = format_data(df, 6, 36, 'SPD_tc_')
+    year = st.radio("year", [
+                    "2050", "2080"], index=0, horizontal=True)
+    data = filter_data(data, year)
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X('senario:N', title=None, axis=alt.Axis(labels=False)),
+        y=alt.Y('value:Q', title="Wind Speed"),
+        color='senario:N',
+        column=alt.Column(
+            'return_period:O',
+            title="Return Period",
+            header=alt.Header(labelOrient='bottom',
+                              titleOrient='bottom', labelPadding=10),
+        ),
+    ).properties(
+        width=100,
+        height=300
+    )
+
+    st.altair_chart(chart, theme="streamlit", use_container_width=False)
+    st.write(data)

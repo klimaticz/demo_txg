@@ -2,8 +2,9 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import pandas as pd
-from services.utils import load_data, get_mid
+from services.utils import load_data, get_mid, format_data, filter_data
 from branca.element import Template, MacroElement
+import altair as alt
 
 
 st.header("Damage Ratio")
@@ -34,12 +35,12 @@ RCP = format_rcp(RCP)
 Year = format_year(Year) if RCP != "baseline" else None
 column_string = f"DM_tc_{RP}_ARI_RCP{RCP}_{Year}" if Year else f"DM_tc_{RP}_ARI_{RCP}"
 
-
 df_viz = pd.concat(
-    [df['Address'], df['Latitude'], df['Longitude'], df[column_string]], axis=1)
+    [df['ID'], df['Address'], df['Latitude'], df['Longitude'], df[column_string]], axis=1)
 
 mean_latitude, mean_longitude = get_mid(df_viz)
-m = folium.Map(location=[mean_latitude, mean_longitude], zoom_start=5)
+m = folium.Map(location=[mean_latitude, mean_longitude],
+               zoom_start=5)
 
 color_scale = {
     'Category - 1': 'green',
@@ -93,13 +94,73 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Damage Ratio: {round(row[column_string], 2)}"
+            tooltip=f"Id: {row['ID']}, Damage Ratio: {round(row[column_string], 2)}",
         ).add_to(m)
 
 macro = MacroElement()
 macro._template = Template(template)
 m.get_root().add_child(macro)
-folium.plugins.Draw(export=True).add_to(m)
+
 output = st_folium(m, width=1000, height=450)
 
-st.write(df_viz)
+id = None
+try:
+    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+
+except:
+    st.warning("No Address is selected")
+
+
+if id is not None:
+    df = df[df['ID'] == id]
+    data = format_data(df, 36, 66, 'DM_tc_')
+    year = st.radio("year", [
+                    "2050", "2080"], index=0, horizontal=True)
+
+    data = filter_data(data, year)
+
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X('senario:N', title=None, axis=alt.Axis(labels=False)),
+        y=alt.Y('value:Q', title="Damage Ratio"),
+        color='senario:N',
+        column=alt.Column(
+            'return_period:O',
+            title="Return Period",
+            header=alt.Header(labelOrient='bottom',
+                              titleOrient='bottom', labelPadding=10),
+        ),
+    ).properties(
+        width=100,
+        height=300
+    )
+
+    st.altair_chart(chart, theme="streamlit", use_container_width=False)
+
+    data2 = df.iloc[:, 70:75]
+    df2_formatted = data2.T.reset_index()
+    df2_formatted.columns = ['key', 'value']
+    df2_formatted.sort_values(by=['key'], inplace=True)
+    chart2 = alt.Chart(df2_formatted).mark_line().encode(
+        x='key',
+        y='value'
+    ).properties(
+        width=800,
+        height=400
+    )
+    st.write(df2_formatted)
+    st.altair_chart(chart2, theme="streamlit", use_container_width=False)
+
+    data3 = df.iloc[:, 66:70]
+    df3_formatted = data3.T.reset_index()
+    df3_formatted.columns = ['key', 'value']
+    st.write(df3_formatted)
+
+    chart3 = alt.Chart(df3_formatted).mark_arc().encode(
+        theta="value",
+        color="key"
+    ).properties(
+        width=600,
+        height=400
+    )
+
+    st.altair_chart(chart3, theme="streamlit", use_container_width=False)

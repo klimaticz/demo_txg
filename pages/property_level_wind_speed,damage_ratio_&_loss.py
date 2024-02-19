@@ -11,6 +11,7 @@ df = load_data('./data/data.csv')
 @st.cache_data
 def format_data(df):
     mean = df.iloc[:, 36:66].mean(axis=0).round(3)
+    st.write(mean)
     df_mean = pd.DataFrame(
         {'key': mean.index, 'value': mean.values}, columns=['key', 'value'])
 
@@ -61,7 +62,6 @@ year = st.radio("year", [
 
 data = format_data(df)
 data = filter_data(data, year)
-# st.write(data)
 
 
 chart = alt.Chart(data).mark_bar().encode(
