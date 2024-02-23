@@ -94,7 +94,7 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Id: {row['ID']}, Damage Ratio: {round(row[column_string], 2)}",
+            tooltip=f"Address: {row['Address']} <br>Damage Ratio: {round(row[column_string], 2)}",
         ).add_to(m)
 
 macro = MacroElement()
@@ -103,16 +103,20 @@ m.get_root().add_child(macro)
 
 output = st_folium(m, width=1000, height=450)
 
-id = None
+
+address = None
 try:
-    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+    address = str(output['last_object_clicked_tooltip'].split("Damage Ratio")[
+        0].strip("Address:").strip(" "))
 
 except:
     st.warning("No Address is selected")
 
 
-if id is not None:
-    df = df[df['ID'] == id]
+if address is not None:
+
+    df = df[df['Address'] == address]
+
     data = format_data(df, 36, 66, 'DM_tc_')
     year = st.radio("year", [
                     "2050", "2080"], index=0, horizontal=True)
@@ -150,14 +154,11 @@ if id is not None:
         width=800,
         height=400
     )
-    st.write(df2_formatted)
     st.altair_chart(chart2, theme="streamlit", use_container_width=False)
 
     data3 = df.iloc[:, 66:70]
     df3_formatted = data3.T.reset_index()
     df3_formatted.columns = ['key', 'value']
-
-    st.write(df3_formatted)
 
     chart3 = alt.Chart(df3_formatted).mark_arc().encode(
         theta="value",

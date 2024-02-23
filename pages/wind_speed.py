@@ -94,7 +94,7 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Id: {row['ID']}, Wind Speed: {round(row[column_string], 2)}"
+            tooltip=f"Address: {row['Address']} <br>Wind Speed: {round(row[column_string], 2)}"
         ).add_to(m)
 
 macro = MacroElement()
@@ -102,16 +102,17 @@ macro._template = Template(template)
 m.get_root().add_child(macro)
 output = st_folium(m, width=1000, height=450)
 
-id = None
+address = None
 try:
-    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+    address = str(output['last_object_clicked_tooltip'].split("Wind Speed")[
+        0].strip("Address:").strip(" "))
 
 except:
     st.warning("No Address is selected")
 
 
-if id is not None:
-    df = df[df['ID'] == id]
+if address is not None:
+    df = df[df['Address'] == address]
     data = format_data(df, 6, 36, 'SPD_tc_')
     year = st.radio("year", [
                     "2050", "2080"], index=0, horizontal=True)
@@ -132,4 +133,3 @@ if id is not None:
     )
 
     st.altair_chart(chart, theme="streamlit", use_container_width=False)
-    st.write(data)
