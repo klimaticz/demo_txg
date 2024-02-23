@@ -139,6 +139,9 @@ if id is not None:
     data2 = df.iloc[:, 70:75]
     df2_formatted = data2.T.reset_index()
     df2_formatted.columns = ['key', 'value']
+    df2_formatted['key'] = df2_formatted['key'].str.replace('_', ' ')
+    df2_formatted['key'] = df2_formatted['key'].str.replace('Avg DM', '')
+    df2_formatted['key'] = 'Senario ' + df2_formatted['key'].astype(str)
     df2_formatted.sort_values(by=['key'], inplace=True)
     chart2 = alt.Chart(df2_formatted).mark_line().encode(
         x='key',
@@ -153,6 +156,7 @@ if id is not None:
     data3 = df.iloc[:, 66:70]
     df3_formatted = data3.T.reset_index()
     df3_formatted.columns = ['key', 'value']
+
     st.write(df3_formatted)
 
     chart3 = alt.Chart(df3_formatted).mark_arc().encode(
