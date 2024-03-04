@@ -118,9 +118,10 @@ if address is not None:
                     "2050", "2080"], index=0, horizontal=True)
     data = filter_data(data, year)
     chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('senario:N', title=None, axis=alt.Axis(labels=False)),
-        y=alt.Y('value:Q', title="Wind Speed"),
-        color='senario:N',
+        x=alt.X('senario:N', title=None, axis=alt.Axis(
+            labels=False), sort=['baseline', 'RCP45', 'RCP85']),
+        y=alt.Y('value:Q', title="Wind Speed in kM/hr"),
+        color=alt.Color('senario:N', sort=['baseline', 'RCP45', 'RCP85']),
         column=alt.Column(
             'return_period:O',
             title="Return Period",
