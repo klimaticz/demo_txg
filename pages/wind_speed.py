@@ -114,6 +114,7 @@ except:
 if address is not None:
     df = df[df['Address'] == address]
     data = format_data(df, 6, 36, 'SPD_tc_')
+    st.subheader("Property Level - Wind Speed")
     year = st.radio("year", [
                     "2050", "2080"], index=0, horizontal=True)
     data = filter_data(data, year)

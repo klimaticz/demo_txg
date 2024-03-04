@@ -116,9 +116,10 @@ except:
 if address is not None:
 
     df = df[df['Address'] == address]
-
+    st.subheader("Property Level Damage Ratio")
     data = format_data(df, 36, 66, 'DM_tc_')
-    year = st.radio("year", [
+
+    year = st.radio("Year", [
                     "2050", "2080"], index=0, horizontal=True)
 
     data = filter_data(data, year)
@@ -141,6 +142,7 @@ if address is not None:
 
     st.altair_chart(chart, theme="streamlit", use_container_width=False)
 
+    st.subheader("Average Damage Ratio")
     data2 = df.iloc[:, 70:75]
     df2_formatted = data2.T.reset_index()
     df2_formatted.columns = ['key', 'value']
@@ -157,13 +159,19 @@ if address is not None:
     )
     st.altair_chart(chart2, theme="streamlit", use_container_width=False)
 
+    st.subheader("Average Loss in $")
     data3 = df.iloc[:, 66:70]
     df3_formatted = data3.T.reset_index()
     df3_formatted.columns = ['key', 'value']
+    pie_renamed_keys = {'45_2041Avg_Loss': 'Scenario 4.5 in 2050',
+                        '45_2081Avg_Loss': 'Scenario 4.5 in 2080', '85_2041Avg_Loss': 'Scenario 8.5 in 2050', '85_2081Avg_Loss': 'Scenario 8.5 in 2080'}
+    df3_formatted['key_renamed'] = df3_formatted['key'].map(pie_renamed_keys)
 
+    # Create the chart with text labels
     chart3 = alt.Chart(df3_formatted).mark_arc().encode(
         theta="value",
-        color="key"
+        color="key_renamed",
+        text='value:Q',
     ).properties(
         width=600,
         height=400
