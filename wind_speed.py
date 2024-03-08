@@ -7,7 +7,7 @@ from services.utils import load_data, get_mid, format_data, filter_data
 from branca.element import Template, MacroElement
 
 st.header("Wind Speed")
-
+color_palette = ["#e07a5f", "#3d405b", "#81b29a", "#f2cc8f"]
 df = load_data('./data/data.csv')
 
 
@@ -122,7 +122,9 @@ if address is not None:
         x=alt.X('senario:N', title=None, axis=alt.Axis(
             labels=False), sort=['baseline', 'RCP45', 'RCP85']),
         y=alt.Y('value:Q', title="Wind Speed in kM/hr"),
-        color=alt.Color('senario:N', sort=['baseline', 'RCP45', 'RCP85']),
+        color=alt.Color('senario:N', scale=alt.Scale(
+            range=color_palette), sort=[
+            'baseline', 'RCP45', 'RCP85']),
         column=alt.Column(
             'return_period:O',
             title="Return Period",
