@@ -7,7 +7,7 @@ from services.utils import load_data, get_mid, format_data, filter_data
 from branca.element import Template, MacroElement
 
 st.header("Wind Speed")
-
+color_palette = ["#e07a5f", "#3d405b", "#81b29a", "#f2cc8f"]
 df = load_data('./data/data.csv')
 
 
@@ -94,7 +94,7 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Id: {row['ID']}, Wind Speed: {round(row[column_string], 2)}"
+            tooltip=f"Address: {row['Address']} <br>Wind Speed: {round(row[column_string], 2)}"
         ).add_to(m)
 
 macro = MacroElement()
@@ -102,24 +102,29 @@ macro._template = Template(template)
 m.get_root().add_child(macro)
 output = st_folium(m, width=1000, height=450)
 
-id = None
+address = None
 try:
-    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+    address = str(output['last_object_clicked_tooltip'].split("Wind Speed")[
+        0].strip("Address:").strip(" "))
 
 except:
     st.warning("No Address is selected")
 
 
-if id is not None:
-    df = df[df['ID'] == id]
+if address is not None:
+    df = df[df['Address'] == address]
     data = format_data(df, 6, 36, 'SPD_tc_')
+    st.subheader("Property Level - Wind Speed")
     year = st.radio("year", [
                     "2050", "2080"], index=0, horizontal=True)
     data = filter_data(data, year)
     chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('senario:N', title=None, axis=alt.Axis(labels=False)),
-        y=alt.Y('value:Q', title="Wind Speed"),
-        color='senario:N',
+        x=alt.X('senario:N', title=None, axis=alt.Axis(
+            labels=False), sort=['baseline', 'RCP45', 'RCP85']),
+        y=alt.Y('value:Q', title="Wind Speed in kM/hr"),
+        color=alt.Color('senario:N', scale=alt.Scale(
+            range=color_palette), sort=[
+            'baseline', 'RCP45', 'RCP85']),
         column=alt.Column(
             'return_period:O',
             title="Return Period",
@@ -132,4 +137,3 @@ if id is not None:
     )
 
     st.altair_chart(chart, theme="streamlit", use_container_width=False)
-    st.write(data)

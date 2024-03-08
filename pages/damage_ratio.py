@@ -6,9 +6,10 @@ from services.utils import load_data, get_mid, format_data, filter_data
 from branca.element import Template, MacroElement
 import altair as alt
 
-
 st.header("Damage Ratio")
 df = load_data('./data/data.csv')
+
+color_palette = ["#e07a5f", "#3d405b", "#81b29a", "#f2cc8f"]
 
 
 def format_rcp(rcp):
@@ -20,13 +21,10 @@ def format_year(year):
 
 
 col1, col2, col3 = st.columns(3)
-
 with col1:
     RCP = st.selectbox('RCP', ("Baseline", "4.5", "8.5"))
-
 with col2:
     RP = st.selectbox('RP', ("1000", "500", "100", "50", "20", "10"))
-
 with col3:
     Year = st.selectbox("Year", ("2050", "2080")
                         ) if RCP != "Baseline" else None
@@ -94,7 +92,7 @@ for index, row in df_viz.iterrows():
             fill=True,
             fill_color=color_scale[category],
             fill_opacity=0.7,
-            tooltip=f"Id: {row['ID']}, Damage Ratio: {round(row[column_string], 2)}",
+            tooltip=f"Address: {row['Address']} <br>Damage Ratio: {round(row[column_string], 2)}",
         ).add_to(m)
 
 macro = MacroElement()
@@ -103,26 +101,33 @@ m.get_root().add_child(macro)
 
 output = st_folium(m, width=1000, height=450)
 
-id = None
+
+address = None
 try:
-    id = int(output['last_object_clicked_tooltip'].split(",")[0].strip("Id: "))
+    address = str(output['last_object_clicked_tooltip'].split("Damage Ratio")[
+        0].strip("Address:").strip(" "))
 
 except:
     st.warning("No Address is selected")
 
 
-if id is not None:
-    df = df[df['ID'] == id]
+if address is not None:
+
+    df = df[df['Address'] == address]
+    st.subheader("Property Level Damage Ratio")
     data = format_data(df, 36, 66, 'DM_tc_')
-    year = st.radio("year", [
+
+    year = st.radio("Year", [
                     "2050", "2080"], index=0, horizontal=True)
 
     data = filter_data(data, year)
 
     chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('senario:N', title=None, axis=alt.Axis(labels=False)),
+        x=alt.X('senario:N', title=None, axis=alt.Axis(
+            labels=False), sort=['baseline', 'RCP45', 'RCP85']),
         y=alt.Y('value:Q', title="Damage Ratio"),
-        color='senario:N',
+        color=alt.Color('senario:N', scale=alt.Scale(
+            range=color_palette), sort=['baseline', 'RCP45', 'RCP85']),
         column=alt.Column(
             'return_period:O',
             title="Return Period",
@@ -136,35 +141,52 @@ if id is not None:
 
     st.altair_chart(chart, theme="streamlit", use_container_width=False)
 
+    st.subheader("Average Damage Ratio")
     data2 = df.iloc[:, 70:75]
     df2_formatted = data2.T.reset_index()
     df2_formatted.columns = ['key', 'value']
-    df2_formatted['key'] = df2_formatted['key'].str.replace('_', ' ')
-    df2_formatted['key'] = df2_formatted['key'].str.replace('Avg DM', '')
-    df2_formatted['key'] = 'Senario ' + df2_formatted['key'].astype(str)
-    df2_formatted.sort_values(by=['key'], inplace=True)
-    chart2 = alt.Chart(df2_formatted).mark_line().encode(
-        x='key',
-        y='value'
+
+    x_format = {
+        'Baseline_Avg_DM': 'Baseline',
+        '45_2041Avg_DM': 'Scenario 4.5, 2050',
+        '45_2081Avg_DM': 'Scenario 4.5, 2080',
+        '85_2041Avg_DM': 'Scenario 8.5, 2050',
+        '85_2081Avg_DM': 'Scenario 8.5, 2080'
+    }
+
+    df2_formatted['formatted_key'] = df2_formatted['key'].map(x_format)
+    line_color = "#3d405b"
+
+    chart2 = alt.Chart(df2_formatted).mark_line(stroke=line_color).encode(
+        x=alt.X('formatted_key:N', title='Average Damage Ratio',
+                sort=list(x_format.values())),
+        y=alt.Y('value:Q', title=None),
     ).properties(
         width=800,
         height=400
     )
-    st.write(df2_formatted)
+
     st.altair_chart(chart2, theme="streamlit", use_container_width=False)
 
+    st.subheader("Average Loss in US $")
     data3 = df.iloc[:, 66:70]
     df3_formatted = data3.T.reset_index()
     df3_formatted.columns = ['key', 'value']
+    pie_renamed_keys = {'45_2041Avg_Loss': 'Scenario 4.5 in 2050',
+                        '45_2081Avg_Loss': 'Scenario 4.5 in 2080', '85_2041Avg_Loss': 'Scenario 8.5 in 2050', '85_2081Avg_Loss': 'Scenario 8.5 in 2080'}
+    df3_formatted['Senarios'] = df3_formatted['key'].map(pie_renamed_keys)
 
-    st.write(df3_formatted)
-
-    chart3 = alt.Chart(df3_formatted).mark_arc().encode(
-        theta="value",
-        color="key"
+    base = alt.Chart(df3_formatted).encode(
+        alt.Theta("value:Q", stack=True),
+        alt.Color("Senarios:N", scale=alt.Scale(range=color_palette))
     ).properties(
         width=600,
         height=400
     )
 
-    st.altair_chart(chart3, theme="streamlit", use_container_width=False)
+    pie = base.mark_arc(outerRadius=120)
+    text = base.mark_text(radius=140, size=14, fill="black").encode(
+        text="value:N"
+    )
+
+    st.altair_chart(pie + text, theme="streamlit", use_container_width=True)
