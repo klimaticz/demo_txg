@@ -4,6 +4,7 @@ from streamlit_folium import st_folium
 import pandas as pd
 import altair as alt
 from services.utils import load_data, get_mid, format_data, filter_data
+from graphs.bar import grouped_bar
 from branca.element import Template, MacroElement
 
 st.header("Wind Speed")
@@ -40,6 +41,7 @@ df_viz = pd.concat(
     [df['ID'], df['Address'], df['Latitude'], df['Longitude'], df[column_string]], axis=1)
 
 mean_latitude, mean_longitude = get_mid(df_viz)
+
 m = folium.Map(location=[mean_latitude, mean_longitude], zoom_start=5)
 
 color_scale = {
@@ -100,6 +102,7 @@ for index, row in df_viz.iterrows():
 macro = MacroElement()
 macro._template = Template(template)
 m.get_root().add_child(macro)
+
 output = st_folium(m, width=1000, height=450)
 
 address = None
@@ -118,22 +121,4 @@ if address is not None:
     year = st.radio("year", [
                     "2050", "2080"], index=0, horizontal=True)
     data = filter_data(data, year)
-    chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('senario:N', title=None, axis=alt.Axis(
-            labels=False), sort=['baseline', 'RCP45', 'RCP85']),
-        y=alt.Y('value:Q', title="Wind Speed in kM/hr"),
-        color=alt.Color('senario:N', scale=alt.Scale(
-            range=color_palette), sort=[
-            'baseline', 'RCP45', 'RCP85']),
-        column=alt.Column(
-            'return_period:O',
-            title="Return Period",
-            header=alt.Header(labelOrient='bottom',
-                              titleOrient='bottom', labelPadding=10),
-        ),
-    ).properties(
-        width=100,
-        height=300
-    )
-
-    st.altair_chart(chart, theme="streamlit", use_container_width=False)
+    grouped_bar(data, 'value:Q', "Wind Speed in kM/hr")

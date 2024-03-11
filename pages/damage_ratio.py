@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import st_folium
 import pandas as pd
 from services.utils import load_data, get_mid, format_data, filter_data
+from graphs.bar import grouped_bar
 from branca.element import Template, MacroElement
 import altair as alt
 
@@ -121,25 +122,7 @@ if address is not None:
                     "2050", "2080"], index=0, horizontal=True)
 
     data = filter_data(data, year)
-
-    chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('senario:N', title=None, axis=alt.Axis(
-            labels=False), sort=['baseline', 'RCP45', 'RCP85']),
-        y=alt.Y('value:Q', title="Damage Ratio"),
-        color=alt.Color('senario:N', scale=alt.Scale(
-            range=color_palette), sort=['baseline', 'RCP45', 'RCP85']),
-        column=alt.Column(
-            'return_period:O',
-            title="Return Period",
-            header=alt.Header(labelOrient='bottom',
-                              titleOrient='bottom', labelPadding=10),
-        ),
-    ).properties(
-        width=100,
-        height=300
-    )
-
-    st.altair_chart(chart, theme="streamlit", use_container_width=False)
+    grouped_bar(data, 'value:Q', "Damage Ratio")
 
     st.subheader("Average Damage Ratio")
     data2 = df.iloc[:, 70:75]
