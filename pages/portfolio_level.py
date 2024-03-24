@@ -2,12 +2,12 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import pandas as pd
-from services.utils import load_data, get_mid, format_data, filter_data, format_transform_bar
+from services.utils import load_data, get_mid, format_data, filter_data, format_transform_bar, format_scenario
 from graphs.bar import grouped_bar, bar
 from branca.element import Template, MacroElement
 import altair as alt
 
-st.header("Damage Ratio")
+st.header("Portfolio Level Analysis")
 df = load_data('./data/data.csv')
 
 color_palette = ["#e07a5f", "#3d405b", "#81b29a", "#f2cc8f", "#f4f1de"]
@@ -115,71 +115,18 @@ except:
 if address is not None:
 
     df = df[df['Address'] == address]
-    st.subheader("Property Level Damage Ratio")
-    data = format_data(df, 36, 66, 'DM_tc_')
 
-    year = st.radio("Year", [
-                    "2050", "2080"], index=0, horizontal=True)
-
-    data = filter_data(data, year)
-    grouped_bar(data, 'value:Q', "Damage Ratio")
-
-    st.subheader("Average Damage Ratio")
-    data2 = df.iloc[:, 70:75]
-    df2_formatted = data2.T.reset_index()
-    df2_formatted.columns = ['key', 'value']
-
-    x_format = {
-        'Baseline_Avg_DM': 'Baseline',
-        '45_2041Avg_DM': 'Scenario 4.5, 2050',
-        '45_2081Avg_DM': 'Scenario 4.5, 2080',
-        '85_2041Avg_DM': 'Scenario 8.5, 2050',
-        '85_2081Avg_DM': 'Scenario 8.5, 2080'
-    }
-
-    df2_formatted['formatted_key'] = df2_formatted['key'].map(x_format)
-    line_color = "#3d405b"
-
-    chart2 = alt.Chart(df2_formatted).mark_line(stroke=line_color).encode(
-        x=alt.X('formatted_key:N', title='Average Damage Ratio',
-                sort=list(x_format.values())),
-        y=alt.Y('value:Q', title=None),
-    ).properties(
-        width=800,
-        height=400
-    )
-
-    st.altair_chart(chart2, theme="streamlit", use_container_width=False)
-
-    st.subheader("Average Loss in US $")
-    data3 = df.iloc[:, 66:70]
-    df3_formatted = data3.T.reset_index()
-    df3_formatted.columns = ['key', 'value']
-    pie_renamed_keys = {'45_2041Avg_Loss': 'Scenario 4.5 in 2050',
-                        '45_2081Avg_Loss': 'Scenario 4.5 in 2080', '85_2041Avg_Loss': 'Scenario 8.5 in 2050', '85_2081Avg_Loss': 'Scenario 8.5 in 2080'}
-    df3_formatted['Senarios'] = df3_formatted['key'].map(pie_renamed_keys)
-
-    base = alt.Chart(df3_formatted).encode(
-        alt.Theta("value:Q", stack=True),
-        alt.Color("Senarios:N", scale=alt.Scale(range=color_palette))
-    ).properties(
-        width=600,
-        height=400
-    )
-
-    pie = base.mark_arc(outerRadius=120)
-    text = base.mark_text(radius=140, size=14, fill="black").encode(
-        text="value:N"
-    )
-
-    st.altair_chart(pie + text, theme="streamlit", use_container_width=True)
-
+    st.subheader("Portfolio level Average Damage Ratio")
     data4 = format_transform_bar(df, 70, 75)
- 
-    bar(data4, 'value:Q', 'key:O')
+    data4['key'] = data4['key'].apply(format_scenario)
+    bar(data4, 'value:Q', 'key:O', '', 'Average Damage Ratio')
 
-    data5 = format_transform_bar(df, 65, 69)
-    bar(data5, 'value:Q', 'key:O')
+    st.subheader("Portfolio Level Total Loss in Trillion US Dollars")
+    data5 = format_transform_bar(df, 66, 70)
+    data5['key'] = data5['key'].apply(format_scenario)
+    bar(data5, 'value:Q', 'key:O', '', 'Total Loss in Trillion US $')
 
+    st.subheader("Portfolio Level- Mean Damage Ratio Index")
     data6 = format_transform_bar(df, 75)
-    bar(data6, 'value:Q', 'key:O')
+    data6['key'] = data6['key'].apply(format_scenario)
+    bar(data6, 'value:Q', 'key:O', '', 'Mean Damage Ratio Index')
