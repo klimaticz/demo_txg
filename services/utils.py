@@ -15,10 +15,16 @@ def get_mid(df):
 
 
 @st.cache_data
+def format_transform_bar(df, start, end=None):
+    data = df.iloc[:, start:end]
+    data_t = data.T.reset_index()
+    data_t.columns = ['key', 'value']
+    return data_t
+
+
+@st.cache_data
 def format_data(df, start, end, abbr):
-    df_formatted = df.iloc[:, start:end]
-    df_formatted = df_formatted.T.reset_index()
-    df_formatted.columns = ['key', 'value']
+    df_formatted = format_transform_bar(df, start, end)
     baseline_rows = df_formatted[df_formatted['key'].str.contains(
         'baseline')].set_index('key')['value'].to_dict()
     baseline_df = pd.DataFrame(baseline_rows.items(), columns=['key', 'value'])
@@ -56,3 +62,26 @@ def filter_data(df, year):
                            var_name='senario', value_name='value')
     df_melt['return_period'] = df_melt['return_period']
     return df_melt
+
+@st.cache_data
+def format_scenario(scenario):
+    scenario = scenario.replace('Avg', '')
+
+    if scenario.startswith('Index_'):
+        parts = scenario.split('_')
+        if len(parts) >= 3:  # Ensure there are enough parts to extract
+            scenario = f"Scenario {parts[1]}_{parts[2]}"
+            scenario = scenario.strip('_')
+            return scenario
+        else:
+            # Return the original scenario if unable to format
+            return f"Scenario {scenario}"
+    elif scenario.startswith('Baseline'):
+        return 'Scenario Baseline'
+    else:
+        parts = scenario.split('_')
+        if len(parts) >= 2:  # Ensure there are enough parts to extract
+            return f"Scenario {parts[0]}_{parts[1]}"
+        else:
+
+            return f"Scenario {scenario}"
