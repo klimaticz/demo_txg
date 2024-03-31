@@ -17,6 +17,7 @@ def get_mid(df):
 @st.cache_data
 def format_transform_bar(df, start, end=None):
     data = df.iloc[:, start:end]
+    data = data.mean()
     data_t = data.T.reset_index()
     data_t.columns = ['key', 'value']
     return data_t
