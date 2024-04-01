@@ -26,11 +26,12 @@ def grouped_bar(data, y_field, y_title):
     st.altair_chart(chart, theme="streamlit", use_container_width=False)
 
 
-def bar(df, y_field, x_field, y_axis_name=None, x_axis_name=None):
+def bar(df, y_field, x_field, y_axis_name=None, x_axis_name=None, order=None):
     chart = alt.Chart(df).mark_bar().encode(
-        x=alt.X(x_field, title=x_axis_name),
+        x=alt.X(x_field, title=x_axis_name, sort=order),
         y=alt.Y(y_field, title=y_axis_name),
-        color=alt.Color(x_field, scale=alt.Scale(range=color_palette))
+        color=alt.Color(x_field, scale=alt.Scale(
+            range=color_palette))
     ).properties(
         width=600,
         height=400
