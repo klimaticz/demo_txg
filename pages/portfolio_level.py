@@ -6,6 +6,9 @@ from services.utils import load_data, get_mid, format_data, filter_data, format_
 from graphs.bar import grouped_bar, bar
 from branca.element import Template, MacroElement
 import altair as alt
+from services.components import add_logo
+
+add_logo()
 
 st.header("Portfolio Level Analysis")
 df = load_data('./data/data.csv')
