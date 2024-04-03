@@ -177,12 +177,3 @@ if address is not None:
 
     st.altair_chart(pie + text, theme="streamlit", use_container_width=True)
 
-    data4 = format_transform_bar(df, 70, 75)
- 
-    bar(data4, 'value:Q', 'key:O')
-
-    data5 = format_transform_bar(df, 65, 69)
-    bar(data5, 'value:Q', 'key:O')
-
-    data6 = format_transform_bar(df, 75)
-    bar(data6, 'value:Q', 'key:O')
