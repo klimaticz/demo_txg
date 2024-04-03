@@ -68,7 +68,10 @@ def filter_data(df, year):
 def format_scenario(scenario):
     scenario = scenario.replace('Avg', '')
 
-    if scenario.startswith('Index_'):
+    if "baseline" in scenario.lower():
+        return 'Baseline'
+
+    elif scenario.startswith('Index_'):
         parts = scenario.split('_')
         if len(parts) >= 3:  # Ensure there are enough parts to extract
             scenario = f"Scenario {parts[1]}_{parts[2]}"
@@ -77,8 +80,7 @@ def format_scenario(scenario):
         else:
             # Return the original scenario if unable to format
             return f"Scenario {scenario}"
-    elif scenario.startswith('Baseline'):
-        return 'Scenario Baseline'
+
     else:
         parts = scenario.split('_')
         if len(parts) >= 2:  # Ensure there are enough parts to extract

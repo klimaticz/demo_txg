@@ -6,10 +6,14 @@ import altair as alt
 from services.utils import load_data, get_mid, format_data, filter_data
 from graphs.bar import grouped_bar
 from branca.element import Template, MacroElement
+from services.components import add_logo
+
+add_logo()
 
 st.header("Wind Speed")
 color_palette = ["#e07a5f", "#3d405b", "#81b29a", "#f2cc8f"]
 df = load_data('./data/data.csv')
+
 
 
 def format_rcp(rcp):
